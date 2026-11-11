@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grade 9 Vocabulary Revision</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#fff8f5;color:#403746}
+    header{text-align:center;padding:28px 16px 18px;background:#f7e8ef}
+    h1{margin:0 0 8px;font-size:27px}
+    header p{margin:0;color:#756875}
+    main{max-width:760px;margin:22px auto;padding:0 15px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
+    button{border:0;border-radius:12px;padding:11px 15px;background:#ead9e7;color:#493d4c;font-weight:bold;cursor:pointer}
+    button.active,button.primary{background:#927b9d;color:white}
+    .panel{background:white;border:1px solid #f0e4eb;border-radius:18px;padding:20px;box-shadow:0 5px 18px #6d52600d}
+    .hidden{display:none}
+    .muted{color:#817783}
+    .card{min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#fff4f7;border-radius:16px;padding:20px;margin:14px 0}
+    .word{font-size:30px;font-weight:bold;margin-bottom:12px}
+    .meaning{font-size:18px;line-height:1.5}
+    .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;justify-content:center}
+    .row button{margin-top:8px}
+    .counter{text-align:center}
+    input{width:100%;padding:12px;border:1px solid #dfd2df;border-radius:10px;margin:6px 0 12px;font-size:16px}
+    .option{display:block;width:100%;text-align:left;margin:9px 0;background:#f5edf4}
+    .option.correct{background:#dff2e4}
+    .option.wrong{background:#ffe2e2}
+    .small{font-size:13px}
+    footer{text-align:center;padding:24px;color:#897e89;font-size:13px}
+    @media(max-width:480px){h1{font-size:23px}.panel{padding:15px}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌷 Grade 9 Vocabulary</h1>
+    <p>Learn a little, practise a little, remember more.</p>
+  </header>
+
+  <main>
+    <nav class="tabs">
+      <button class="active" onclick="showTab('cards',this)">Flashcards</button>
+      <button onclick="showTab('quiz',this)">Quick Quiz</button>
+      <button onclick="showTab('add',this)">My Words</button>
+    </nav>
+
+    <section id="cards" class="panel">
+      <div class="counter muted" id="cardCount"></div>
+      <div class="card">
+        <div class="word" id="cardWord">Analyse</div>
+        <div class="meaning hidden" id="cardMeaning">To examine something carefully.</div>
+        <p class="muted small" id="cardHint">Think of the meaning, then tap “Show meaning”.</p>
+      </div>
+      <div class="row">
+        <button class="primary" onclick="flipCard()">Show meaning</button>
+        <button onclick="nextCard()">Next word →</button>
+      </div>
+    </section>
+
+    <section id="quiz" class="panel hidden">
+      <p class="muted" id="quizCount">Choose the correct meaning.</p>
+      <h2 id="quizWord">What does “analyse” mean?</h2>
+      <div id="options"></div>
+      <p id="feedback" aria-live="polite"></p>
+      <div class="row"><button class="primary" onclick="newQuestion()">Next question</button></div>
+      <p class="counter muted small" id="score">Score: 0</p>
+    </section>
+
+    <section id="add" class="panel hidden">
+      <h2>Add your own vocabulary</h2>
+      <label for="newWord">Word</label>
+      <input id="newWord" placeholder="Example: significant">
+      <label for="newMeaning">Meaning</label>
+      <input id="newMeaning" placeholder="Write a simple definition">
+      <button class="primary" onclick="addWord()">Add word</button>
+      <p id="addMessage" class="muted" aria-live="polite"></p>
+      <p class="small muted">Your added words stay in this page while it is open. Add them to the word list in the code if you want them included after refreshing.</p>
+    </section>
+  </main>
+
+  <footer>Made for focused Grade 9 revision ✨</footer>
+
+  <script>
+    const words = [
+      {word:"Analyse", meaning:"To examine something carefully."},
+      {word:"Significant", meaning:"Important or meaningful."},
+      {word:"Contrast", meaning:"To explain how two things are different."},
+      {word:"Evidence", meaning:"Facts or information that support an idea."},
+      {word:"Conclude", meaning:"To make a decision after thinking about the facts."},
+      {word:"Interpret", meaning:"To explain the meaning of something."},
+      {word:"Perspective", meaning:"A particular way of thinking about or viewing something."},
+      {word:"Consequence", meaning:"A result or effect of an action."},
+      {word:"Accurate", meaning:"Correct and free from mistakes."},
+      {word:"Evaluate", meaning:"To judge the value, quality, or importance of something."}
+    ];
+
+    let current = 0, showing = false, score = 0, questionNumber = 0, answered = false;
+
+    function showTab(id, button) {
+      document.querySelectorAll("main section").forEach(s => s.classList.add("hidden"));
+      document.getElementById(id).classList.remove("hidden");
+      document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+      button.classList.add("active");
+      if (id === "quiz" && questionNumber === 0) newQuestion();
+    }
+
+    function renderCard() {
+      document.getElementById("cardWord").textContent = words[current].word;
+      document.getElementById("cardMeaning").textContent = words[current].meaning;
+      document.getElementById("cardMeaning").classList.add("hidden");
+      document.getElementById("cardHint").classList.remove("hidden");
+      document.getElementById("cardCount").textContent = `Word ${current + 1} of ${words.length}`;
+      showing = false;
+    }
+    function flipCard() {
+      showing = !showing;
+      document.getElementById("cardMeaning").classList.toggle("hidden", !showing);
+      document.getElementById("cardHint").classList.toggle("hidden", showing);
+      document.querySelector("#cards .primary").textContent = showing ? "Hide meaning" : "Show meaning";
+    }
+    function nextCard() { current = (current + 1) % words.length; renderCard(); }
+
+    function newQuestion() {
+      questionNumber++;
+      answered = false;
+      const correct = words[Math.floor(Math.random() * words.length)];
+      document.getElementById("quizWord").textContent = `What does “${correct.word}” mean?`;
+      document.getElementById("quizCount").textContent = `Question ${questionNumber} · Choose the correct meaning.`;
+      document.getElementById("feedback").textContent = "";
+      const choices = [correct];
+      while (choices.length < 4) {
+        const pick = words[Math.floor(Math.random() * words.length)];
+        if (!choices.includes(pick)) choices.push(pick);
+      }
+      choices.sort(() => Math.random() - 0.5);
+      const area = document.getElementById("options");
+      area.innerHTML = "";
+      choices.forEach(choice => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = choice.meaning;
+        btn.onclick = () => checkAnswer(btn, choice === correct);
+        area.appendChild(btn);
+      });
+    }
+    function checkAnswer(button, correct) {
+      if (answered) return;
+      answered = true;
+      if (correct) { score++; button.classList.add("correct"); document.getElementById("feedback").textContent = "Correct! Well done 🌟"; }
+      else { button.classList.add("wrong"); document.getElementById("feedback").textContent = "Not quite. Try to remember the meaning for next time."; }
+      document.getElementById("score").textContent = `Score: ${score} / ${questionNumber}`;
+    }
+    function addWord() {
+      const word = document.getElementById("newWord").value.trim();
+      const meaning = document.getElementById("newMeaning").value.trim();
+      const message = document.getElementById("addMessage");
+      if (!word || !meaning) { message.textContent = "Please enter both a word and its meaning."; return; }
+      words.push({word, meaning});
+      message.textContent = `“${word}” was added! You can revise it in Flashcards.`;
+      document.getElementById("newWord").value = "";
+      document.getElementById("newMeaning").value = "";
+    }
+    renderCard();
+  </script>
+</body>
+</html>
